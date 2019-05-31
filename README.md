@@ -6,4 +6,5 @@
 0. Mesh 
 1. Phong and Gouraud Shading
 2. Lighting and Vary Lights
-3. Ray Tracing (Stretch!)
+3. Texture Mapping
+4. Ray Tracing (Stretch!)
