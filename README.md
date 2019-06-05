@@ -3,6 +3,7 @@
 ## Team River Stx - Stefan Tan & Sophia Xia   
 
 ### List of Features to Implement:
+APPROVED!
 0. Mesh 
 1. Phong and Gouraud Shading
 2. Lighting and Vary Lights
