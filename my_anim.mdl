@@ -1,5 +1,6 @@
-frames 50
+frames 10
 basename ball
+shading gouraud
 constants blue 0.05375 0.05 0.06625 0.18275 0.17 0.22525 0.332741 0.328634 0.346435
 push
 move 250 200 0

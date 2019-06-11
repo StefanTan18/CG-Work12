@@ -3,8 +3,8 @@ CFLAGS= -g
 LDFLAGS= -lm
 CC= gcc
 
-run: parser simple_anim.mdl
-	./mdl simple_anim.mdl
+run: parser my_anim.mdl
+	./mdl my_anim.mdl
 
 parser: lex.yy.c y.tab.c y.tab.h $(OBJECTS)
 	gcc -o mdl $(CFLAGS) lex.yy.c y.tab.c $(OBJECTS) $(LDFLAGS)
@@ -27,7 +27,7 @@ print_pcode.o: print_pcode.c parser.h matrix.h
 matrix.o: matrix.c matrix.h
 	gcc -c $(CFLAGS) matrix.c
 
-my_main.o: my_main.c parser.h print_pcode.c matrix.h display.h ml6.h draw.h stack.h
+my_main.o: my_main.c parser.h print_pcode.c matrix.h display.h ml6.h draw.h stack.h uthash.h
 	gcc -c $(CFLAGS) my_main.c
 
 display.o: display.c display.h ml6.h matrix.h

@@ -48,6 +48,7 @@
 #include "draw.h"
 #include "stack.h"
 #include "gmath.h"
+#include "uthash.h"
 
 /*======== void first_pass() ==========
   Inputs:
@@ -70,7 +71,7 @@ void first_pass() {
   //These variables are defined at the bottom of symtab.h
   extern int num_frames;
   extern char name[128];
-
+  
   int frames_found;
   int name_found;
   int i;
@@ -171,6 +172,13 @@ void my_main() {
 
   struct vary_node ** knobs;
   struct vary_node * vn;
+  struct my_struct{
+    double key[3];
+    double value[3];
+    UT_hash_handle hh;
+  };
+  struct my_struct *vnorms = NULL;
+
   first_pass();
   knobs = second_pass();
   char frame_name[128];
@@ -250,6 +258,13 @@ void my_main() {
       printf("%d: ",i);
       switch (op[i].opcode)
         {
+	case SHADING:
+	  printf("Shading: %s", op[i].op.shading.p->name);
+	  if(strcmp(op[i].op.shading.p->name, "gouraud")==0){
+	  }
+	  else if(strcmp(op[i].op.shading.p->name, "phong")==0){
+	  }
+	  break;
         case SPHERE:
           printf("Sphere: %6.2f %6.2f %6.2f r=%6.2f",
                  op[i].op.sphere.d[0],op[i].op.sphere.d[1],
@@ -267,7 +282,7 @@ void my_main() {
                      op[i].op.sphere.d[2],
                      op[i].op.sphere.r, step_3d);
           matrix_mult( peek(systems), tmp );
-          draw_polygons(tmp, t, zb, view, light, ambient,
+          draw_polygons(tmp, vnorms, t, zb, view, light, ambient,
                         reflect);
           tmp->lastcol = 0;
           reflect = &white;
@@ -290,7 +305,7 @@ void my_main() {
                     op[i].op.torus.d[2],
                     op[i].op.torus.r0,op[i].op.torus.r1, step_3d);
           matrix_mult( peek(systems), tmp );
-          draw_polygons(tmp, t, zb, view, light, ambient,
+          draw_polygons(tmp, vnorms, t, zb, view, light, ambient,
                         reflect);
           tmp->lastcol = 0;
           reflect = &white;
@@ -314,7 +329,7 @@ void my_main() {
                   op[i].op.box.d1[0],op[i].op.box.d1[1],
                   op[i].op.box.d1[2]);
           matrix_mult( peek(systems), tmp );
-          draw_polygons(tmp, t, zb, view, light, ambient,
+          draw_polygons(tmp, vnorms, t, zb, view, light, ambient,
                         reflect);
           tmp->lastcol = 0;
           reflect = &white;

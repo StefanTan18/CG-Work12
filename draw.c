@@ -8,6 +8,18 @@
 #include "math.h"
 #include "gmath.h"
 #include "symtab.h"
+#include "uthash.h"
+
+struct my_struct{
+  double key[3];
+  double value[3];
+  UT_hash_handle hh;
+};
+struct my_struct *vnorms = NULL;
+
+void calc_gouraud(){
+  
+}
 
 /*======== void draw_scanline() ==========
   Inputs: struct matrix *points
@@ -177,7 +189,7 @@ void add_polygon( struct matrix *polygons,
   Goes through polygons 3 points at a time, drawing
   lines connecting each points to create bounding triangles
   ====================*/
-void draw_polygons( struct matrix *polygons, screen s, zbuffer zb,
+void draw_polygons( struct matrix *polygons, struct my_struct *vnorms, screen s, zbuffer zb,
                     double *view, double light[2][3], color ambient,
                     struct constants *reflect) {
   if ( polygons->lastcol < 3 ) {
@@ -190,7 +202,23 @@ void draw_polygons( struct matrix *polygons, screen s, zbuffer zb,
 
   for (point=0; point < polygons->lastcol-2; point+=3) {
 
+    struct my_struct *s;
+    double vertex[3] = {polygons->m[0][point], polygons->m[1][point], polygons->m[2][point]};
+    //Is the vertex already in the hashtable?
+    HASH_FIND_INT(vnorms, vertex, s);
+    //If not, add the vertex to the hashtable
+    if(s == NULL){
+      s = (struct my_struct *)malloc(sizeof *s);
+      s->key[0] = polygons->m[0][point];
+      s->key[1] = polygons->m[1][point];
+      s->key[2] = polygons->m[2][point];
+      HASH_ADD_INT(vnorms, key, s);
+    }
+    //Calculate and add the surface normal of the polygon
     normal = calculate_normal(polygons, point);
+    s->value[0] += normal[0];
+    s->value[1] += normal[1];
+    s->value[2] += normal[2];
 
     if ( normal[2] > 0 ) {
 
