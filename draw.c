@@ -10,17 +10,6 @@
 #include "symtab.h"
 #include "uthash.h"
 
-struct my_struct{
-  double key[3];
-  double value[3];
-  UT_hash_handle hh;
-};
-struct my_struct *vnorms = NULL;
-
-void calc_gouraud(){
-  
-}
-
 /*======== void draw_scanline() ==========
   Inputs: struct matrix *points
           int i
@@ -189,7 +178,7 @@ void add_polygon( struct matrix *polygons,
   Goes through polygons 3 points at a time, drawing
   lines connecting each points to create bounding triangles
   ====================*/
-void draw_polygons( struct matrix *polygons, struct my_struct *vnorms, screen s, zbuffer zb,
+void draw_polygons( struct matrix *polygons, struct hash *vnorms, screen s, zbuffer zb,
                     double *view, double light[2][3], color ambient,
                     struct constants *reflect) {
   if ( polygons->lastcol < 3 ) {
@@ -199,26 +188,40 @@ void draw_polygons( struct matrix *polygons, struct my_struct *vnorms, screen s,
 
   int point;
   double *normal;
+  struct hash *new;
 
   for (point=0; point < polygons->lastcol-2; point+=3) {
 
-    struct my_struct *s;
     double vertex[3] = {polygons->m[0][point], polygons->m[1][point], polygons->m[2][point]};
     //Is the vertex already in the hashtable?
-    HASH_FIND_INT(vnorms, vertex, s);
+    HASH_FIND_INT(vnorms, vertex, new);
     //If not, add the vertex to the hashtable
-    if(s == NULL){
-      s = (struct my_struct *)malloc(sizeof *s);
-      s->key[0] = polygons->m[0][point];
-      s->key[1] = polygons->m[1][point];
-      s->key[2] = polygons->m[2][point];
-      HASH_ADD_INT(vnorms, key, s);
+    if(new == NULL){
+      new = (struct hash *)malloc(sizeof *new);
+      new->key[0] = polygons->m[0][point];
+      new->key[1] = polygons->m[1][point];
+      new->key[2] = polygons->m[2][point];
+      HASH_ADD_INT(vnorms, key, new);
     }
-    //Calculate and add the surface normal of the polygon
+    //Calculate and add the surface normal of the polygon to the vertex normal
     normal = calculate_normal(polygons, point);
-    s->value[0] += normal[0];
-    s->value[1] += normal[1];
-    s->value[2] += normal[2];
+    new->value[0] += normal[0];
+    new->value[1] += normal[1];
+    new->value[2] += normal[2];
+
+  }
+
+  //Normalize all the vertex normals
+  for(new = vnorms; new != NULL; new = new->hh.next){
+    normal = new->value;
+    normalize(normal);
+    new->value[0] = normal[0];
+    new->value[1] = normal[1];
+    new->value[2] = normal[2];
+    printf("%lf %lf %lf \n", new->value[0], new->value[1], new->value[2]);
+  }
+  
+  for (point=0; point < polygons->lastcol-2; point+=3) {
 
     if ( normal[2] > 0 ) {
 

@@ -172,12 +172,7 @@ void my_main() {
 
   struct vary_node ** knobs;
   struct vary_node * vn;
-  struct my_struct{
-    double key[3];
-    double value[3];
-    UT_hash_handle hh;
-  };
-  struct my_struct *vnorms = NULL;
+  struct hash *vnorms = NULL;
 
   first_pass();
   knobs = second_pass();
