@@ -273,7 +273,7 @@ void my_main() {
       if (op[i].op.sphere.constants != NULL) {
         reflect = op[i].op.sphere.constants->s.c;
       }
-      draw_polygons(tmp, vnorms, t, zb, view, light, ambient, reflect);
+      draw_polygons(tmp, vnorms, t, zb, view, light, ambient, reflect, shade);
       tmp->lastcol = 0;
       break;
         case SPHERE:
