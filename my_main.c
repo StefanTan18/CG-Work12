@@ -180,6 +180,9 @@ void my_main() {
   char frame_name[128];
   int f;
 
+  //0 is flat, 1 is gouraud, 2 is phong
+  int shade = 0;
+
   int i;
   struct matrix *tmp;
   struct stack *systems;
@@ -254,24 +257,26 @@ void my_main() {
       printf("%d: ",i);
       switch (op[i].opcode)
         {
-          case SHADING:
-	         printf("Shading: %s", op[i].op.shading.p->name);
-	          if(strcmp(op[i].op.shading.p->name, "gouraud")==0){
-	           }
-	            else if(strcmp(op[i].op.shading.p->name, "phong")==0){
-	             }
-	              break;
-          case MESH:
-            parse(tmp, op[i].op.mesh.name);
-            matrix_mult(peek(systems), tmp);
-            reflect = &white;
-            if (op[i].op.sphere.constants != NULL) {
-              reflect = op[i].op.sphere.constants->s.c;
-            }
-            draw_polygons(tmp, vnorms, t, zb, view, light, ambient, reflect);
-            tmp->lastcol = 0;
-            break;
-          case SPHERE:
+	case SHADING:
+	  printf("Shading: %s", op[i].op.shading.p->name);
+	  if(strcmp(op[i].op.shading.p->name, "gouraud")==0){
+	    shade = 1;
+	  }
+	  else if(strcmp(op[i].op.shading.p->name, "phong")==0){
+	    shade = 2;
+	  }
+	  break;
+    case MESH:
+      parse(tmp, op[i].op.mesh.name);
+      matrix_mult(peek(systems), tmp);
+      reflect = &white;
+      if (op[i].op.sphere.constants != NULL) {
+        reflect = op[i].op.sphere.constants->s.c;
+      }
+      draw_polygons(tmp, vnorms, t, zb, view, light, ambient, reflect);
+      tmp->lastcol = 0;
+      break;
+        case SPHERE:
           printf("Sphere: %6.2f %6.2f %6.2f r=%6.2f",
                  op[i].op.sphere.d[0],op[i].op.sphere.d[1],
                  op[i].op.sphere.d[2],
@@ -289,7 +294,7 @@ void my_main() {
                      op[i].op.sphere.r, step_3d);
           matrix_mult( peek(systems), tmp );
           draw_polygons(tmp, vnorms, t, zb, view, light, ambient,
-                        reflect);
+                        reflect, shade);
           tmp->lastcol = 0;
           reflect = &white;
           break;
@@ -312,7 +317,7 @@ void my_main() {
                     op[i].op.torus.r0,op[i].op.torus.r1, step_3d);
           matrix_mult( peek(systems), tmp );
           draw_polygons(tmp, vnorms, t, zb, view, light, ambient,
-                        reflect);
+                        reflect, shade);
           tmp->lastcol = 0;
           reflect = &white;
           break;
@@ -336,7 +341,7 @@ void my_main() {
                   op[i].op.box.d1[2]);
           matrix_mult( peek(systems), tmp );
           draw_polygons(tmp, vnorms, t, zb, view, light, ambient,
-                        reflect);
+                        reflect, shade);
           tmp->lastcol = 0;
           reflect = &white;
           break;

@@ -51,7 +51,7 @@ void draw_scanline(int x0, double z0, int x1, double z1, int y, screen s, zbuffe
 
   Fills in polygon i by drawing consecutive horizontal (or vertical) lines.
   ====================*/
-void scanline_convert( struct matrix *points, int i, screen s, zbuffer zb, color il ) {
+void scanline_convert( struct matrix *points, int i, screen s, zbuffer zb, int shade, color vcolors[3]) {
 
   int top, mid, bot, y;
   int distance0, distance1, distance2;
@@ -123,6 +123,22 @@ void scanline_convert( struct matrix *points, int i, screen s, zbuffer zb, color
   dz0 = distance0 > 0 ? (points->m[2][top]-points->m[2][bot])/distance0 : 0;
   dz1 = distance1 > 0 ? (points->m[2][mid]-points->m[2][bot])/distance1 : 0;
 
+  double btr, btg, btb, bmr, bmg, bmb, mtr, mtg, mtb;
+  
+  //increment B->T
+  btr = (vcolors[0].red - vcolors[2].red) / distance0;
+  btg = (vcolors[0].green - vcolors[2].green) / distance0;
+  btb = (vcolors[0].blue - vcolors[2].blue) / distance0;
+  //increment B->M
+  bmr = (vcolors[1].red - vcolors[2].red) / distance1;
+  bmg = (vcolors[1].green - vcolors[2].green) / distance1;
+  bmb = (vcolors[1].blue - vcolors[2].blue) / distance1;
+  //increment M->T
+  mtr = (vcolors[0].red - vcolors[1].red) / distance2;
+  mtg = (vcolors[0].green - vcolors[1].green) / distance2;
+  mtb = (vcolors[0].blue - vcolors[1].blue) / distance2;
+  color il = vcolors[2];
+  color ir = vcolors[2];
   while ( y <= (int)points->m[1][top] ) {
     //printf("\tx0: %0.2f x1: %0.2f y: %d\n", x0, x1, y);
 
@@ -132,9 +148,27 @@ void scanline_convert( struct matrix *points, int i, screen s, zbuffer zb, color
       dz1 = distance2 > 0 ? (points->m[2][top]-points->m[2][mid])/distance2 : 0;
       x1 = points->m[0][mid];
       z1 = points->m[2][mid];
+      il[0].red += btr;
+      il[0].green += btg;
+      il[0].blue += btb;
+      ir[0].red += mtr;
+      ir[0].green += mtg;
+      ir[0].blue += mtb;      
     }//end flip code
+    //Using I at vertex, interpolate endpoint I
+    if(flip == 0){
+      il[0].red += btr;
+      il[0].green += btg;
+      il[0].blue += btb;
+      ir[0].red += bmr;
+      ir[0].green += bmg;
+      ir[0].blue += bmb;
+    }
+    
+    //calculate the color increment
+
     //draw_line(x0, y, z0, x1, y, z1, s, zb, il);
-    draw_scanline(x0, z0, x1, z1, y, s, zb, il);
+    draw_scanline(x0, z0, x1, z1, y, s, zb, il, ir);
 
     x0+= dx0;
     x1+= dx1;
@@ -180,7 +214,7 @@ void add_polygon( struct matrix *polygons,
   ====================*/
 void draw_polygons( struct matrix *polygons, struct hash *vnorms, screen s, zbuffer zb,
                     double *view, double light[2][3], color ambient,
-                    struct constants *reflect) {
+                    struct constants *reflect, int shade) {
   if ( polygons->lastcol < 3 ) {
     printf("Need at least 3 points to draw a polygon!\n");
     return;
@@ -208,7 +242,6 @@ void draw_polygons( struct matrix *polygons, struct hash *vnorms, screen s, zbuf
     new->value[0] += normal[0];
     new->value[1] += normal[1];
     new->value[2] += normal[2];
-
   }
 
   //Normalize all the vertex normals
@@ -225,9 +258,79 @@ void draw_polygons( struct matrix *polygons, struct hash *vnorms, screen s, zbuf
 
     if ( normal[2] > 0 ) {
 
+      //GET TOP MID AND BOT
+      int top, mid, bot, y0, y1, y2;
+      y0 = polygons->m[0][point];
+      y1 = polygons->m[1][point+1];
+      y2 = polygons->m[2][point+2];
+
+      if ( y0 <= y1 && y0 <= y2) {
+	bot = point;
+	if (y1 <= y2) {
+	  mid = point+1;
+	  top = point+2;
+	}
+	else {
+	  mid = point+2;
+	  top = point+1;
+	}
+      }//end y0 bottom
+      else if (y1 <= y0 && y1 <= y2) {
+	bot = point+1;
+	if (y0 <= y2) {
+	  mid = point;
+	  top = point+2;
+	}
+	else {
+	  mid = point+2;
+	  top = point;
+	}
+      }//end y1 bottom
+      else {
+	bot = point+2;
+	if (y0 <= y1) {
+	  mid = point;
+	  top = point+1;
+	}
+	else {
+	  mid = point+1;
+	  top = point;
+	}
+      }//end y2 bottom
+
+      
       // get color value only if front facing
-      color i = get_lighting(normal, view, ambient, light, reflect);
-      scanline_convert(polygons, point, s, zb, i);
+      //color i = get_lighting(normal, view, ambient, light, reflect);
+      //calculate color at the vertices
+      struct hash *new = NULL;
+      double vertex[3] = {polygons->m[0][top],polygons->m[1][top],polygons->m[2][top]};
+      HASH_FIND_INT(vnorms, vertex, new);
+      double norm[3] = {new->value[0], new->value[1], new->value[2]};
+      color it = get_lighting(norm, view, ambient, light, reflect);
+
+      vertex[0] = polygons->m[0][mid];
+      vertex[1] = polygons->m[1][mid];
+      vertex[2] = polygons->m[2][mid];
+      
+      HASH_FIND_INT(vnorms, vertex, new);
+      norm[0] = new->value[0];
+      norm[1] = new->value[1];
+      norm[2] = new->value[2];
+      color im = get_lighting(norm, view, ambient, light, reflect);
+
+      vertex[0] = polygons->m[0][bot];
+      vertex[1] = polygons->m[1][bot];
+      vertex[2] = polygons->m[2][bot];
+      
+      HASH_FIND_INT(vnorms, vertex, new);
+      norm[0] = new->value[0];
+      norm[1] = new->value[1];
+      norm[2] = new->value[2];
+      color ib = get_lighting(norm, view, ambient, light, reflect);
+
+      color vcolors[3] = {it, im, ib};
+
+      scanline_convert(polygons, point, s, zb, shade, vcolors);
 
       /* draw_line( polygons->m[0][point], */
       /*            polygons->m[1][point], */
