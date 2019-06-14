@@ -179,6 +179,9 @@ void my_main() {
   char frame_name[128];
   int f;
 
+  //0 is flat, 1 is gouraud, 2 is phong
+  int shade = 0;
+  
   int i;
   struct matrix *tmp;
   struct stack *systems;
@@ -256,8 +259,10 @@ void my_main() {
 	case SHADING:
 	  printf("Shading: %s", op[i].op.shading.p->name);
 	  if(strcmp(op[i].op.shading.p->name, "gouraud")==0){
+	    shade = 1;
 	  }
 	  else if(strcmp(op[i].op.shading.p->name, "phong")==0){
+	    shade = 2;
 	  }
 	  break;
         case SPHERE:
@@ -278,7 +283,7 @@ void my_main() {
                      op[i].op.sphere.r, step_3d);
           matrix_mult( peek(systems), tmp );
           draw_polygons(tmp, vnorms, t, zb, view, light, ambient,
-                        reflect);
+                        reflect, shade);
           tmp->lastcol = 0;
           reflect = &white;
           break;
@@ -301,7 +306,7 @@ void my_main() {
                     op[i].op.torus.r0,op[i].op.torus.r1, step_3d);
           matrix_mult( peek(systems), tmp );
           draw_polygons(tmp, vnorms, t, zb, view, light, ambient,
-                        reflect);
+                        reflect, shade);
           tmp->lastcol = 0;
           reflect = &white;
           break;
@@ -325,7 +330,7 @@ void my_main() {
                   op[i].op.box.d1[2]);
           matrix_mult( peek(systems), tmp );
           draw_polygons(tmp, vnorms, t, zb, view, light, ambient,
-                        reflect);
+                        reflect, shade);
           tmp->lastcol = 0;
           reflect = &white;
           break;

@@ -7,8 +7,8 @@
 #include "symtab.h"
 #include "uthash.h"
 
-void draw_scanline(int x0, double z0, int x1, double z1, int y, screen s, zbuffer zb, color c);
-void scanline_convert( struct matrix *points, int i, screen s, zbuffer zb, color il );
+void draw_scanline(int x0, double z0, int x1, double z1, int y, screen s, zbuffer zb, color il, color ir);
+void scanline_convert( struct matrix *points, int i, screen s, zbuffer zb, int shade, color vcolors[3]);
 
 //polygon organization
 void add_polygons( struct matrix * polys,
@@ -17,7 +17,7 @@ void add_polygons( struct matrix * polys,
                    double x2, double y2, double z2);
 void draw_polygons( struct matrix * polys, struct hash *vnorms,
 		    screen s, zbuffer zb, double *view, double light[2][3],
-		    color ambient,struct constants *reflect);
+		    color ambient,struct constants *reflect, int shade);
 
 //advanced shapes
 //3d shapes
