@@ -49,6 +49,7 @@
 #include "stack.h"
 #include "gmath.h"
 #include "uthash.h"
+#include "mesh.h"
 
 /*======== void first_pass() ==========
   Inputs:
@@ -71,7 +72,7 @@ void first_pass() {
   //These variables are defined at the bottom of symtab.h
   extern int num_frames;
   extern char name[128];
-  
+
   int frames_found;
   int name_found;
   int i;
@@ -253,14 +254,24 @@ void my_main() {
       printf("%d: ",i);
       switch (op[i].opcode)
         {
-	case SHADING:
-	  printf("Shading: %s", op[i].op.shading.p->name);
-	  if(strcmp(op[i].op.shading.p->name, "gouraud")==0){
-	  }
-	  else if(strcmp(op[i].op.shading.p->name, "phong")==0){
-	  }
-	  break;
-        case SPHERE:
+          case SHADING:
+	         printf("Shading: %s", op[i].op.shading.p->name);
+	          if(strcmp(op[i].op.shading.p->name, "gouraud")==0){
+	           }
+	            else if(strcmp(op[i].op.shading.p->name, "phong")==0){
+	             }
+	              break;
+          case MESH:
+            parse(tmp, op[i].op.mesh.name);
+            matrix_mult(peek(systems), tmp);
+            reflect = &white;
+            if (op[i].op.sphere.constants != NULL) {
+              reflect = op[i].op.sphere.constants->s.c;
+            }
+            draw_polygons(tmp, vnorms, t, zb, view, light, ambient, reflect);
+            tmp->lastcol = 0;
+            break;
+          case SPHERE:
           printf("Sphere: %6.2f %6.2f %6.2f r=%6.2f",
                  op[i].op.sphere.d[0],op[i].op.sphere.d[1],
                  op[i].op.sphere.d[2],
