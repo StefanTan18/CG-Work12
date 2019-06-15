@@ -2,8 +2,11 @@
 ## Work 12: The End
 ## Team River Stx - Stefan Tan & Sophia Xia   
 
+### List of Implemented Features:
+0. Mesh
+1. Coordinate System
+
 ### List of Features to Implement:
-APPROVED!
 0. Mesh 
 1. Phong and Gouraud Shading
 2. Lighting and Vary Lights
