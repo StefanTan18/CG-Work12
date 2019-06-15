@@ -4,11 +4,9 @@
 ## Period 5
 
 ### List of Implemented Features:
-0. Mesh
-<br>
+0. Mesh 
 ```mesh :<.obj file>```
-1. Coordinate System
-<br>
+1. Coordinate System  
 ```save_coord_system <name>``` 
 ### Attempted to Implement:
 0. Shading 
