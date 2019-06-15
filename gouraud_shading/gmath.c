@@ -6,6 +6,7 @@
 #include "matrix.h"
 #include "ml6.h"
 #include "symtab.h"
+#include "uthash.h"
 
 /*============================================
   IMPORANT NOTE
@@ -19,6 +20,46 @@
   Reflection constants (ka, kd, ks) are represened as arrays of
   doubles (red, green, blue)
   ============================================*/
+
+struct hash *get_vnorms(struct matrix *polygons, struct hash *vnorms){
+  int point;
+  double *normal;
+
+  for (point=0; point < polygons->lastcol; point+=1) { 
+
+    struct hash *new = NULL;
+
+    double vertex[3] = {polygons->m[0][point], polygons->m[1][point], polygons->m[2][point]};
+
+    //Is the vertex already in the hashtable?
+    HASH_FIND_INT(vnorms, vertex, new);
+    //If not, add the vertex to the hashtable
+    if(new == NULL){
+      new = (struct hash *)malloc(sizeof *new);
+      new->key[0] = polygons->m[0][point];
+      new->key[1] = polygons->m[1][point];
+      new->key[2] = polygons->m[2][point];
+      HASH_ADD_INT(vnorms, key, new);
+    }
+    //Calculate and add the surface normal of the polygon to the vertex normal   
+    normal = calculate_normal(polygons, (point-(point%3)) );
+    new->value[0] += normal[0];
+    new->value[1] += normal[1];
+    new->value[2] += normal[2];
+  }
+
+  struct hash *new = NULL;
+  //Normalize all the vertex normals
+  for(new = vnorms; new != NULL; new = new->hh.next){
+    normal = new->value;
+    normalize(normal);
+    new->value[0] = normal[0];
+    new->value[1] = normal[1];
+    new->value[2] = normal[2];
+  }
+
+  return vnorms;
+}
 
 
 //lighting functions

@@ -4,6 +4,7 @@
 #include "matrix.h"
 #include "ml6.h"
 #include "symtab.h"
+#include "uthash.h"
 
 // constants for lighting
 #define LOCATION 0
@@ -14,6 +15,8 @@
 
 
 #define SPECULAR_EXP 4
+
+struct hash *get_vnorms(struct matrix *polygons, struct hash *vnorms);
 
 // lighting functions
 color get_lighting( double *normal, double *view, color alight, double light[2][3], struct constants *reflect);
