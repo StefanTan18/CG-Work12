@@ -21,7 +21,7 @@
   ====================*/
 void draw_scanline(int x0, double z0, int x1, double z1, int y, screen s, zbuffer zb, int shade, color il, color ir, color c) {
   //printf("%lf %lf %lf %lf %lf %lf \n", il.red, il.blue, il.green, ir.red, il.blue, il.green);
-  
+  //printf("reached draw_scanline");
   int tx, tz;
   color it;
   //swap if needed to assure left->right drawing
@@ -43,11 +43,12 @@ void draw_scanline(int x0, double z0, int x1, double z1, int y, screen s, zbuffe
   double z = z0;
   double dr, db, dg;  
   if(shade == 1){
+    printf("calc color increments");
     //calculate color increments
     if(x1-x0 != 0){
-      dr = (double)(ir.red-il.red)/(x1-x0 +1);
-      db = (double)(ir.blue-il.blue)/(x1-x0 +1);
-      dg = (double)(ir.green-il.green)/(x1-x0 +1);
+      dr = (double)(il.red)/(x1-x0 +1);
+      db = (double)(il.blue)/(x1-x0 +1);
+      dg = (double)(il.green)/(x1-x0 +1);
     }
     else{
       dr = 0.0;
@@ -55,16 +56,17 @@ void draw_scanline(int x0, double z0, int x1, double z1, int y, screen s, zbuffe
       dg = 0.0;
     }
   }
-  if(shade == 1){
-    c.red = il.red;
-    c.green = il.green;
-    c.blue = il.blue;
-  }
   //printf("%lf %lf %lf\n", dr, db, dg);
   for(x=x0; x <= x1; x++) {
+    if(shade == 1){
+      c.red = il.red;
+      c.green = il.green;
+      c.blue = il.blue;
+    }
     plot(s, zb, c, x, y, z);
     z+= delta_z;
     if(shade == 1){
+      //printf("interpolating across scanline");
       il.red += dr;
       il.green += dg;
       il.blue += db;
@@ -85,6 +87,8 @@ void scanline_convert( struct matrix *points, struct hash *vnorms,
 		       int i, screen s, zbuffer zb,
 		       double *view, double light[2][3], color ambient, struct constants *reflect, int shade, color c) {
 
+  //printf("reached scanline convert");
+  
   //printf("%d %d %d | %d %d %d | %d %d %d\n", vcolors[0].red, vcolors[0].green, vcolors[0].blue, vcolors[1].red, vcolors[1].green, vcolors[1].blue, vcolors[2].red, vcolors[2].green, vcolors[2].blue);
   
   int top, mid, bot, y;
@@ -156,11 +160,12 @@ void scanline_convert( struct matrix *points, struct hash *vnorms,
   dx1 = distance1 > 0 ? (points->m[0][mid]-points->m[0][bot])/distance1 : 0;
   dz0 = distance0 > 0 ? (points->m[2][top]-points->m[2][bot])/distance0 : 0;
   dz1 = distance1 > 0 ? (points->m[2][mid]-points->m[2][bot])/distance1 : 0;
-
+  
   color il, ir, t, m, b;
   double btr, btg, btb, bmr, bmg, bmb, mtr, mtg, mtb;
 
   if(shade == 1){
+    //printf("get b m t vertex colors");
     //get b color
     struct hash *new = NULL;
     double vertex[3] = {points->m[0][top],points->m[1][top],points->m[2][top]};
@@ -249,7 +254,6 @@ void scanline_convert( struct matrix *points, struct hash *vnorms,
 
     //draw_line(x0, y, z0, x1, y, z1, s, zb, il);
     draw_scanline(x0, z0, x1, z1, y, s, zb, shade, il, ir, c);
-
     x0+= dx0;
     x1+= dx1;
     z0+= dz0;
@@ -320,47 +324,14 @@ void draw_polygons( struct matrix *polygons, struct hash *vnorms, screen s, zbuf
   double *normal;
 
   vnorms = get_vnorms(polygons, vnorms);
+  //printf("\ngot_vnorms\n");
   
   for (point=0; point < polygons->lastcol-2; point+=3) {
 
+    normal = calculate_normal(polygons, point);
+    
     if ( normal[2] > 0 ) {
 
-      // get color value only if front facing
-      //color i = get_lighting(normal, view, ambient, light, reflect);
-      /*
-      //calculate color at the vertices
-      struct hash *new = NULL;
-      double vertex[3] = {polygons->m[0][top],polygons->m[1][top],polygons->m[2][top]};
-      //printf("%lf %lf %lf | ", vertex[0], vertex[1], vertex[2]);
-
-      HASH_FIND_INT(vnorms, vertex, new);
-      double norm[3] = {new->value[0], new->value[1], new->value[2]};
-      color it = get_lighting(norm, view, ambient, light, reflect);
-
-      vertex[0] = polygons->m[0][mid];
-      vertex[1] = polygons->m[1][mid];
-      vertex[2] = polygons->m[2][mid];
-
-      //printf("%lf %lf %lf | ", vertex[0], vertex[1], vertex[2]);
-      
-      HASH_FIND_INT(vnorms, vertex, new);
-      norm[0] = new->value[0];
-      norm[1] = new->value[1];
-      norm[2] = new->value[2];
-      color im = get_lighting(norm, view, ambient, light, reflect);
-
-      vertex[0] = polygons->m[0][bot];
-      vertex[1] = polygons->m[1][bot];
-      vertex[2] = polygons->m[2][bot];
-
-      //printf("%lf %lf %lf | \n", vertex[0], vertex[1], vertex[2]);
-      
-      HASH_FIND_INT(vnorms, vertex, new);
-      norm[0] = new->value[0];
-      norm[1] = new->value[1];
-      norm[2] = new->value[2];
-      */
-      
       color c = get_lighting(normal, view, ambient, light, reflect);
       
       scanline_convert(polygons, vnorms, point, s, zb, view, light, ambient, reflect, shade, c);
