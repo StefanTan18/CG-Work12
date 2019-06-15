@@ -1,0 +1,5 @@
+move 250 250 0
+save_coord_system center
+scale 10 10 10
+mesh :sandal.obj
+display

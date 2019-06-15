@@ -1,0 +1,13 @@
+move 250 250 0
+rotate x 30
+save_coord_system center
+
+move 9999 9999 9999
+
+//should show up
+sphere 0 0 0 100 center
+
+//should NOT show up
+sphere 0 -200 0 50
+
+display

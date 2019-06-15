@@ -1,0 +1,12 @@
+push
+light white 1 1 1 255 255 255
+//light red 1 1 1 255 0 0
+move 250 250 0
+push
+rotate x 45
+rotate y -45
+scale 30 30 30
+mesh :airboat.obj
+pop
+display
+save airboat.png
